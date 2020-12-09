@@ -1,6 +1,5 @@
 import styled from 'styled-components';
 import { shade } from 'polished';
-import Repository from '../repository/index';
 
 export const Title = styled.h1`
   font-size: 48px;
@@ -51,7 +50,7 @@ export const Form = styled.form`
   }
 `;
 
-export const Respositories = styled.div`
+export const Repositories = styled.div`
   margin-top: 80px;
   max-width: 700px;
 

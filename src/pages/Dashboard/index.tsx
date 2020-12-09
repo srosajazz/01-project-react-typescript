@@ -1,68 +1,78 @@
-import React from 'react';
+/* eslint-disable react/jsx-no-comment-textnodes */
+import React, { useState, FormEvent } from 'react';
 import logoImg from '../../assets/logo.svg';
 import { FiChevronRight } from 'react-icons/fi';
-import { Title, Form, Respositories } from './styles';
+import api from '../../services/api';
+import Repository from '../repository/index';
+import { Title, Form, Repositories } from './styles';
+
+/**
+ * todo: Interfaces Data from -> https://api.github.com/repos/srosajazz/EnsHelpConnector
+ */
+interface Repository {
+  full_name: string;
+  description: string;
+  owner: {
+    login: string;
+    avatar_url: string;
+  };
+}
 
 const Dashboard: React.FC = () => {
+  //todo: Create a state only to save the input in the form
+  const [newRepo, setNewRepo] = useState('');
+
+  //todo: useState([]) - > Save the repository in same place.
+  const [repositories, setRepositories] = useState<Repository[]>([]);
+
+  // todo: fuction to add repositories
+  async function handleAddRepository(
+    event: FormEvent<HTMLFormElement>,
+  ): Promise<void> {
+    event.preventDefault();
+
+    /**
+     * todo - Save new repositorie inside of state
+     * todo - Add new repository
+     * todo - consume github API
+     * todo:  Call api.ts*/
+    const response = await api.get<Repository>(`repos/${newRepo}`);
+
+    const repository = response.data;
+
+    setRepositories([...repositories, repository]);
+    // ! clear the input
+    setNewRepo('');
+  }
+
   return (
     <>
       <img src={logoImg} alt="Github Explorer" />
       <Title>Explore repository on Github</Title>
-      {/* Form */}
-      <Form>
-        <input placeholder="Type repository name" />
+
+      <Form onSubmit={handleAddRepository}>
+        <input
+          value={newRepo}
+          onChange={(e) => setNewRepo(e.target.value)}
+          placeholder="Type repository name"
+        />
         <button type="submit">Search</button>
       </Form>
-      {/* List */}
-      <Respositories>
-        <a href="test">
-          <img
-            src="https://avatars1.githubusercontent.com/u/42471460?s=460&u=d8266ec25d17d375e01ae625cb93b947c57451bd&v=4"
-            alt="Sergio Rosa"
-          />
-          <div>
-            <strong>Sergio Rosa</strong>
-            <p>
-              "Practice does not make perfect. Only perfect practice makes
-              perfect."
-            </p>
-          </div>
-          {/* icons -  > */}
-           <FiChevronRight size={20} />
-        </a>
-        {/* 2 */}
-        <a href="test">
-          <img
-            src="https://avatars1.githubusercontent.com/u/42471460?s=460&u=d8266ec25d17d375e01ae625cb93b947c57451bd&v=4"
-            alt="Sergio Rosa"
-          />
-          <div>
-            <strong>Sergio Rosa</strong>
-            <p>
-              "Practice does not make perfect. Only perfect practice makes
-              perfect."
-            </p>
-          </div>
-          {/* icons -  > */}
-           <FiChevronRight size={20} />
-        </a>
-        {/* 3 */}
-        <a href="test">
-          <img
-            src="https://avatars1.githubusercontent.com/u/42471460?s=460&u=d8266ec25d17d375e01ae625cb93b947c57451bd&v=4"
-            alt="Sergio Rosa"
-          />
-          <div>
-            <strong>Sergio Rosa</strong>
-            <p>
-              "Practice does not make perfect. Only perfect practice makes
-              perfect."
-            </p>
-          </div>
-          {/* icons -  > */}
-           <FiChevronRight size={20} />
-        </a>
-      </Respositories>
+      <Repositories>
+        {repositories.map((repository) => (
+          <a key={repository.full_name} href="test">
+            <img
+              src={repository.owner.avatar_url}
+              alt={repository.owner.login}
+            />
+            <div>
+              <strong>{repository.full_name}</strong>
+              <p>{repository.description}</p>
+            </div>
+             <FiChevronRight size={20} />
+          </a>
+        ))}
+      </Repositories>
     </>
   );
 };

@@ -1,7 +1,9 @@
 /* eslint-disable react/jsx-no-comment-textnodes */
-import React, { useState, FormEvent } from 'react';
+import React, { useState, useEffect, FormEvent } from 'react';
 import logoImg from '../../assets/logo.svg';
 import { FiChevronRight } from 'react-icons/fi';
+
+import { Link } from 'react-router-dom';
 import api from '../../services/api';
 import Repository from '../repository/index';
 import { Title, Form, Repositories, Error } from './styles';
@@ -23,36 +25,37 @@ const Dashboard: React.FC = () => {
   //todo: Create a state only to save the input in the form
   const [newRepo, setNewRepo] = useState('');
 
-  // todo: Handle Error message.
   const [inputError, setInputError] = useState('');
 
-  //todo: useState([]) - > Save the repository in same place.
-  const [repositories, setRepositories] = useState<Repository[]>([]);
+  const [repositories, setRepositories] = useState(() => {
+    const storageRepositories = localStorage.getItem('@Github:respositories');
 
-  // todo: fuction to add repositories
-  async function handleAddRepository(
-    event: FormEvent<HTMLFormElement>,
-  ): Promise<void> {
-    event.preventDefault();
-    // todo:check for Error meesage output
-    if (!newRepo) {
-      setInputError('Enter author/name and repository name');
-      return;
+    if (storageRepositories) {
+      return JSON.parse(storageRepositories);
     }
+
+    return [];
+  });
+
+  useEffect(() => {
+    localStorage.setItem('@Github:respositories', JSON.stringify(repositories));
+  }, [repositories]);
+
+  async function handleAddRepository(e) {
+    e.preventDefault();
+
+    if (!newRepo) {
+      return setInputError('Digite o autor/nome do repositório.');
+    }
+
     try {
-      /**
-       * todo - Save new repositorie inside of state
-       * todo - Add new repository
-       * todo - consume github API
-       * todo:  Call api.ts*/
-      const response = await api.get<Repository>(`repos/${newRepo}`);
-      const repository = response.data;
-      setRepositories([...repositories, repository]);
-      // ! clear the input
+      const { data } = await api.get(`/repos/${newRepo}`);
+
+      setRepositories([...repositories, data]);
       setNewRepo('');
       setInputError('');
-    } catch (err) {
-      setInputError('Can not find this repository');
+    } catch (error) {
+      return setInputError('Erro ao buscar este repositório.');
     }
   }
 
@@ -71,19 +74,27 @@ const Dashboard: React.FC = () => {
       </Form>
       {inputError && <Error>{inputError}</Error>}
       <Repositories>
-        {repositories.map((repository) => (
-          <a key={repository.full_name} href="test">
-            <img
-              src={repository.owner.avatar_url}
-              alt={repository.owner.login}
-            />
-            <div>
-              <strong>{repository.full_name}</strong>
-              <p>{repository.description}</p>
-            </div>
-             <FiChevronRight size={20} />
-          </a>
-        ))}
+        {repositories.map(
+          (repository: { 
+            id: string | number | null | string;
+            owner: { avatar_url: string | string };
+            full_name: React.ReactNode;
+            description: React.ReactNode;
+          }) => (
+            <Link key={repository.id} to={'/repository'}>
+              <img
+                src={repository.owner.avatar_url}
+                alt={`repositories/>${repository.full_name}`}
+              />
+              <div>
+                <strong>{repository.full_name}</strong>
+                <p>{repository.description}</p>
+              </div>
+
+              <FiChevronRight size={20} />
+            </Link>
+          ),
+        )}
       </Repositories>
     </>
   );
